@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Dose - Medication Reminder"
+version = "1.3.0"
+id = "artifacts/dose"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.3.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 19033
+
+[services.development]
+run = "pnpm --filter @workspace/dose run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/dose", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/dose", "run", "serve" ]
+
+[services.env]
+PORT = "19033"
+BASE_PATH = "/"

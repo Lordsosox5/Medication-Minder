@@ -1,0 +1,498 @@
+Build a modern mobile medication reminder app called “Dose” with 4 screens, bilingual Arabic/English, smart recurring dose alarms, and professional medical-friendly UX
+MASTER PROMPT
+Create a modern, professional, mobile-first medication reminder app named “Dose”.
+The app’s primary purpose is to calculate and display the next dose time for each medication, based on a user-defined recurring interval, and to ring persistent alarms until the user confirms intake.
+This app should be designed with excellent UI/UX, feel like a real polished health app, and be optimized for both English and Arabic users, including full RTL support when Arabic is selected.
+Use a clean, modern, minimal medical design language with:
+Tajawal font for all Arabic text and preferably app-wide typography
+Soft rounded corners
+Clean spacing
+Clear hierarchy
+Accessible touch targets
+Simple but premium visual style
+Professional medication-management feel
+Light and dark themes
+Smooth transitions and subtle animations
+The app must contain exactly 4 screens:
+Splash Screen
+Home / Medications Dashboard
+Add / Edit Medication Screen
+Settings Screen
+CORE APP CONCEPT
+The app name is Dose.
+This app allows the user to:
+Add medications
+Define medication recurrence intervals
+View remaining time until next dose
+Receive persistent alarms
+Confirm when they actually took the medication
+Automatically recycle the next reminder based on the interval
+Keep medications in the list even after dose time passes
+Delete medications manually only when the user decides they are done
+Important behavior:
+If a medication is set as every 6 hours, then after the user confirms intake, the app should automatically schedule the next dose exactly 6 hours later, and keep repeating forever until deleted.
+If the scheduled time passes and the user does not confirm, the medication must remain in an Overdue state.
+The alarm must behave like a mobile alarm, meaning:
+It keeps ringing / vibrating / showing notification
+It should not stop automatically
+It only stops when the user taps “Confirm Intake”
+Medications should never disappear automatically
+Users can manually delete a medication only by pressing delete
+SCREEN 1 — SPLASH SCREEN
+Purpose
+A polished branded entry screen.
+Behavior
+Show the Dose logo centered
+Show the app name Dose
+Duration: 6 seconds
+Then automatically navigate to Home screen
+UI Requirements
+Clean medical-tech feel
+Minimal background
+Subtle fade-in animation for logo
+Optional tiny tagline:
+English: “Never miss a dose”
+Arabic: "لا تفوّت أي جرعة"
+Respect current theme if available, otherwise default to light mode
+Splash Layout
+Centered logo
+App name below logo
+Optional loading indicator or subtle pulse
+No buttons
+SCREEN 2 — HOME / MEDICATIONS DASHBOARD
+Purpose
+Main screen that shows all active medications and their countdowns.
+Main Features
+List of all medications
+Each medication card shows:
+Medication name
+Medication type (Pill or Injection)
+Dose amount
+Route / way of intake
+Interval (e.g. every 24h, 12h, 6h, 4h)
+Last confirmed intake time
+Next dose time
+Linear countdown bar
+Remaining time text
+Status badge:
+Upcoming
+Due Now
+Overdue
+Completed Recently
+Floating Add Button or prominent Add button
+Bottom navigation menu with icons
+VERY IMPORTANT COUNTDOWN LOGIC
+Use a linear progress countdown, NOT circular.
+For each medication:
+Show a horizontal progress bar
+Show remaining time as text:
+Example:
+Next dose in 02:14:33
+Due now
+Overdue by 00:34:12
+Progress should visually represent how far the user is into the current cycle
+Medication Card UX
+Each medication card should include:
+Medication icon based on type:
+Pill icon
+Syringe icon
+Name as main title
+Small secondary metadata row
+Clear countdown row
+Color-coded status badge:
+Blue = upcoming
+Orange = due soon
+Red = overdue
+Green = confirmed recently
+Action buttons:
+Confirm Intake (primary)
+Delete (secondary / destructive)
+Optional Edit icon
+Confirm Intake Behavior
+When user taps Confirm Intake:
+Save actual intake timestamp as last taken
+Stop active alarm immediately
+Schedule next reminder = current confirmation time + selected interval
+Update countdown instantly
+Show success toast/snackbar:
+“Dose confirmed”
+Arabic equivalent
+Overdue Logic
+If scheduled time has passed and user has not confirmed:
+Card remains visible
+Status changes to Overdue
+Alarm continues or repeats based on alarm strategy
+The Confirm Intake button becomes more prominent
+The app must never auto-delete or auto-complete the medication
+Add Button
+Large floating action button with plus icon
+Opens Add / Edit Medication Screen
+Empty State (important)
+If no medications exist:
+Friendly illustration or icon
+Message:
+English: “No medications added yet”
+Arabic equivalent
+CTA button:
+“Add your first medication”
+Home Header
+Top section:
+Greeting / app title
+Optional summary cards:
+Active medications count
+Due now count
+Overdue count
+Search or filter optional
+Quick filter chips:
+All
+Due now
+Overdue
+Pills
+Injections
+Bottom Navigation (Lower Border Menu)
+Use a modern bottom navigation bar with icons:
+Home (Dashboard)
+Add (quick add shortcut or modal trigger)
+Settings
+Even though the app has 4 screens, keep the nav simple and clean:
+Home
+Add
+Settings
+(You may still implement Add as its own screen but accessible from bottom nav and FAB.)
+SCREEN 3 — ADD / EDIT MEDICATION SCREEN
+Purpose
+Create or edit a medication schedule.
+Form Requirements
+This screen must be professional, clean, easy to use, and medically practical.
+Required Fields
+Medication Name
+Text input
+Placeholder examples:
+Paracetamol
+Insulin
+Amoxicillin
+Medication Type
+Segmented control or chips:
+Pill
+Injection
+Dose Amount
+Text / numeric field
+Examples:
+500 mg
+1 tablet
+10 units
+2 mL
+Route / Way of Intake
+Dropdown or selectable chips:
+Oral
+IM
+IV
+SC
+Sublingual
+Topical
+Inhalation
+Other
+Must adapt logically if type is Injection or Pill
+Example:
+Pill defaults to Oral
+Injection defaults to IM/IV/SC options first
+Recurrence Interval (Predefined Choices) Provide ready-made options:
+Every 24 hours
+Every 12 hours
+Every 8 hours
+Every 6 hours
+Every 4 hours
+Every 2 hours (optional advanced)
+Custom interval (advanced optional)
+The user explicitly requested ready choices like:
+24 hrs
+12 hrs
+6 hrs
+4 hrs
+These must be clearly visible as quick-select chips.
+First Dose Time / Start Time
+Time picker
+Optional date picker if needed
+Default = current time
+Alarm Sound
+Select default tone
+Optional vibration toggle
+Persistent alarm enabled by default
+Notes (Optional but useful)
+Example:
+Take after food
+Before sleep
+Rotate injection site
+Do not miss
+Save Button
+Large primary button
+Sticky footer if possible
+On save:
+Validate inputs
+Create recurring medication schedule
+Return to Home
+Show success message
+Delete Button (when editing existing medication)
+Visible only if editing
+Destructive style
+Ask for confirmation dialog:
+“Delete this medication?”
+Explain it removes all future reminders
+UX Requirements
+Large readable inputs
+Keyboard-safe layout
+Clear section grouping
+Smooth transitions
+Smart defaults
+Validation messages inline
+Disable Save until required fields are valid
+SCREEN 4 — SETTINGS SCREEN
+Purpose
+Simple, modern settings with bilingual and theme support.
+Required Settings
+Theme Mode
+Light mode
+Dark mode
+Optional system default
+Toggle or segmented control
+Language Switcher
+English
+العربية
+Must instantly update the entire app
+ALL text must fully translate, not partial
+Arabic mode must switch app layout to RTL
+English mode must switch app layout to LTR
+Alarm Settings
+Persistent alarm ON/OFF (default ON, recommended locked ON for medication safety)
+Vibration ON/OFF
+Snooze options (optional but if used, snooze must still not count as confirmed intake)
+Alarm volume behavior note:
+“Alarm stops only after confirming intake”
+Notification Permissions Status
+Show whether notifications are enabled
+Button to open system settings if disabled
+About Section
+App name: Dose
+Version
+Short description:
+“Smart recurring medication reminders”
+Optional Helpful Settings
+12h / 24h time format
+Default interval preference
+Confirmation vibration feedback
+Backup / local storage note
+Settings UI Style
+Clean list items
+Grouped sections
+Rounded cards
+Minimal icons
+Modern spacing
+Clear toggles
+BILINGUAL / LOCALIZATION REQUIREMENTS (VERY IMPORTANT)
+This app must support full bilingual localization:
+Languages
+English
+Arabic
+Behavior
+When English is selected:
+All text in English
+LTR layout
+Left-aligned text where appropriate
+When Arabic is selected:
+Every single text string in the entire app must switch to Arabic
+Full RTL layout
+Right-aligned text where appropriate
+Icons and paddings should mirror properly when necessary
+Font
+Use Tajawal font for Arabic
+Prefer Tajawal as global app font for consistency if possible
+Localization Quality
+No mixed-language labels
+No untranslated placeholders
+No broken RTL spacing
+Buttons, nav labels, toasts, dialogs, status badges, empty states, alerts, form labels, and validation errors must all be translated
+ALARM / NOTIFICATION SYSTEM (CRITICAL LOGIC)
+Implement a persistent medication alarm system.
+Requirements
+When dose time arrives:
+Trigger full-screen or high-priority local notification if possible
+Play sound like a mobile alarm
+Vibrate repeatedly if enabled
+Show medication name and dose details
+Show clear action:
+Confirm Intake
+The alarm should continue until user confirms
+The alarm should NOT auto-dismiss
+The reminder should NOT be considered completed until confirmed
+Important Rule
+Confirm Intake = the only action that completes the current cycle
+When user confirms:
+Stop alarm
+Save timestamp
+Recalculate next dose:
+nextDose = confirmationTime + interval
+Start the next cycle immediately
+If user ignores it
+Medication becomes Overdue
+Remains in list
+Alarm can repeat at configurable intervals (e.g. every 5–10 min) until confirmed
+Still not removed
+DATA MODEL / APP LOGIC (FOR DEVELOPER QUALITY)
+Each medication object should include:
+id
+name
+type (pill | injection)
+doseAmount
+route
+intervalHours
+startTime
+lastConfirmedAt
+nextDueAt
+isAlarmActive
+notes
+createdAt
+updatedAt
+isArchived (optional false by default; but do not auto-archive)
+notificationId(s)
+Derived States
+Upcoming
+Due now
+Overdue
+Confirmed recently
+Core Formula
+If first time:
+nextDueAt = startTime
+After each confirmation:
+lastConfirmedAt = actual confirmation timestamp
+nextDueAt = lastConfirmedAt + intervalHours
+This ensures real-world flexibility if the user takes a dose late.
+UI/UX DESIGN SYSTEM
+Visual Style
+Clean medical productivity app
+Modern, minimal, trustworthy
+Not childish
+Not overly colorful
+Professional enough for doctors, students, and patients
+Color Palette
+Use a calm medical palette:
+Primary: soft blue or teal
+Secondary: neutral gray
+Success: green
+Warning: amber/orange
+Danger: red
+Backgrounds:
+Light: white / very light gray
+Dark: deep navy / charcoal
+Components
+Rounded cards
+Soft shadows
+Clear iconography
+Bottom nav with subtle elevation
+Floating action button
+Linear progress bars
+Segmented controls
+Chips for interval selection
+Sticky save button
+Toast/snackbar feedback
+Accessibility
+High contrast
+Large tap targets
+Readable typography
+Clear error states
+Color + text status (not color only)
+Works well for elderly users too
+WHAT TO ADD TO MAKE IT MORE COMPLETE (IMPORTANT)
+Please make the app more advanced and useful, while keeping only 4 screens.
+Add these helpful features:
+Smart extras to include
+Search/filter medications on Home
+Sort by:
+Next due
+Overdue first
+Alphabetical
+Quick summary at top:
+Total active meds
+Due now
+Overdue
+“Taken history preview” inside card or expandable section
+Edit medication option
+Confirm dialog for delete
+Offline-first local storage
+Persistent data after app restart
+Local notifications
+Graceful permission requests
+Empty states and helpful onboarding hints (without adding extra screens)
+Haptic feedback on important actions
+Smooth micro-animations
+Safe confirmation dialog for missed doses:
+“Confirm you took this dose now?”
+Optional overdue highlight pulse animation
+Optional medication color tag
+Optional next 24h summary section
+TECHNICAL EXPECTATIONS
+If building as a real mobile app:
+Prefer Flutter or React Native
+Use local storage (SQLite / Hive / AsyncStorage / secure local db as appropriate)
+Use local notifications / alarm scheduling
+Support background reminders
+Handle timezone correctly
+State management should be clean and scalable
+Architecture should be production-friendly
+If building UI prototype:
+Make it fully clickable and realistic
+All 4 screens connected
+Use realistic mock data
+Include Arabic + English examples
+Demonstrate RTL behavior
+BOTTOM NAVIGATION SPEC
+Bottom navigation must be visible on main screens and include:
+Home icon
+Add icon
+Settings icon
+Use a modern floating or rounded bottom bar style.
+EXACT UX RULES TO FOLLOW
+Do not remove medications automatically after time passes.
+Do not remove medications after confirmation.
+Medication remains active forever until user deletes it.
+After each confirmation, recalculate next dose using actual confirmation time, not original schedule.
+Use linear countdown, never circular.
+Alarm must behave like a true persistent mobile alarm.
+App must support full Arabic RTL and English LTR switching.
+Use Tajawal font.
+Keep the app modern, professional, clean, and medically trustworthy.
+Exactly 4 screens only.
+SAMPLE MICROCOPY (OPTIONAL, IMPROVED)
+English
+Dose confirmed
+Next dose scheduled
+Due now
+Overdue
+Confirm Intake
+Add Medication
+No medications yet
+Never miss a dose
+Arabic
+تم تأكيد الجرعة
+تم جدولة الجرعة التالية
+حان موعد الجرعة
+متأخرة
+تأكيد تناول الجرعة
+إضافة دواء
+لا توجد أدوية بعد
+لا تفوّت أي جرعة
+FINAL OUTPUT REQUEST TO THE AI BUILDER
+Build the full Dose app with:
+4 screens only
+High-fidelity mobile UI
+Realistic modern medical design
+English + Arabic full localization
+RTL/LTR switching
+Tajawal font
+Light + dark mode
+Persistent recurring alarms
+Linear countdown bars
+Medication list with due/overdue states
+Add/Edit medication workflow
+Bottom navigation bar
+Smooth, polished, production-quality UX
+Ready for real app development, not just a rough concept
