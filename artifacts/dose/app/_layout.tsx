@@ -14,15 +14,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 
 import React, { useEffect } from "react";
-import { Platform } from "react-native";
+import { Platform, PermissionsAndroid } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import * as Notifications from "expo-notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { AppContextProvider } from "@/context/AppContext";
-import { initializeUnityAds, loadInterstitial, loadTimedAd, showTimedAd } from "@/services/unity-ads";
+import { AppContextProvider, useApp } from "@/context/AppContext";
+import FullScreenNotificationModal from "@/components/FullScreenNotificationModal";
 
 const queryClient = new QueryClient();
 
@@ -37,8 +37,52 @@ function RootLayoutNav() {
       }}
     >
       <Stack.Screen name="index" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="setup" />
       <Stack.Screen name="(tabs)" />
     </Stack>
+  );
+}
+
+function NotificationOverlay() {
+  const {
+    foregroundNotification,
+    clearForegroundNotification,
+    confirmIntake,
+    delayMedication,
+    settings,
+  } = useApp();
+
+  if (!foregroundNotification) return null;
+
+  const isArabic = settings.language === "ar";
+  const medId = foregroundNotification.request.content.data?.medId;
+  const title =
+    foregroundNotification.request.content.title ||
+    (isArabic ? "تذكير الدواء" : "Medication Reminder");
+  const body =
+    foregroundNotification.request.content.body ||
+    (isArabic ? "حان وقت تناول دوائك" : "Time to take your medication");
+
+  return (
+    <FullScreenNotificationModal
+      visible={!!foregroundNotification}
+      title={title}
+      body={body}
+      locale={isArabic ? "ar" : "en"}
+      confirmLabel={isArabic ? "تأكيد" : "Confirm"}
+      delayLabel={isArabic ? "ذكرني بعد 5 دقائق" : "Remind me in 5 min"}
+      dismissLabel={isArabic ? "إغلاق" : "Dismiss"}
+      onConfirm={() => {
+        if (medId) void confirmIntake(medId);
+        clearForegroundNotification();
+      }}
+      onDelay={() => {
+        if (medId) void delayMedication(medId, 5);
+        clearForegroundNotification();
+      }}
+      onDismiss={clearForegroundNotification}
+    />
   );
 }
 
@@ -55,20 +99,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (Platform.OS !== "web") {
-      initializeUnityAds()
-        .then(() => Promise.all([loadInterstitial(), loadTimedAd()]))
-        .catch(() => {});
+      // Unity Ads removed; no ad initialization required.
     }
-  }, []);
-
-  useEffect(() => {
-    if (Platform.OS === "web") return;
-    const TEN_MINUTES = 10 * 60 * 1000;
-    const interval = setInterval(async () => {
-      await showTimedAd();
-      loadTimedAd();
-    }, TEN_MINUTES);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -77,6 +109,22 @@ export default function RootLayout() {
       const { status } = await Notifications.requestPermissionsAsync();
       if (status !== "granted") return;
 
+      if (Platform.OS === "android") {
+        try {
+          // On Android 13+ apps must request POST_NOTIFICATIONS at runtime
+          // in addition to using Notifications.requestPermissionsAsync.
+          if (Platform.Version >= 33) {
+            const res = await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+            );
+            if (res !== PermissionsAndroid.RESULTS.GRANTED) {
+              // user denied notification permission on Android 13+
+            }
+          }
+        } catch (e) {}
+      }
+
+      // Handler for notifications when app is in foreground
       Notifications.setNotificationHandler({
         handleNotification: async () => ({
           shouldShowAlert: true,
@@ -87,17 +135,34 @@ export default function RootLayout() {
         }),
       });
 
-      Notifications.scheduleNotificationAsync({
-        content: {
-          title: "مرحبا بك!",
-          body: "يمكنمك الآن تتبع أدويتك بسهولة مع تابيرا.",
-          sound: true,
-        },
-        trigger: { type: "timeInterval", seconds: 5 },
-      });
+      // Listener for notifications when app is in foreground
+      // This ensures full-screen reminder displays even with locked screen
+      const foregroundSubscription = Notifications.addNotificationReceivedListener(
+        (notification: Notifications.Notification) => {
+          // Notification will be handled by NotificationOverlay component
+          // which accesses it via useApp().foregroundNotification
+          void notification;
+        }
+      );
+
+      // Listener for when user interacts with notification
+      const responseSubscription = Notifications.addNotificationResponseReceivedListener(
+        (response: Notifications.NotificationResponse) => {
+          // Handled by app's notification action system
+          void response;
+        }
+      );
+
+      return () => {
+        foregroundSubscription.remove();
+        responseSubscription.remove();
+      };
     }
 
-    setupNotifications();
+    const unsubscribe = setupNotifications();
+    return () => {
+      unsubscribe?.then(fn => fn?.());
+    };
   }, []);
 
   if (!fontsLoaded && !fontError) return null;
@@ -110,6 +175,7 @@ export default function RootLayout() {
             <GestureHandlerRootView style={{ flex: 1 }}>
               <KeyboardProvider>
                 <RootLayoutNav />
+                <NotificationOverlay />
               </KeyboardProvider>
             </GestureHandlerRootView>
           </AppContextProvider>

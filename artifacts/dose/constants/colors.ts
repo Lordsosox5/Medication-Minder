@@ -26,7 +26,7 @@ export default {
     info: "#38F7A7",
     infoLight: "#E0FDF4",
     overlay: "rgba(0,0,0,0.5)",
-    buttonText: "#0A2A1A",
+    buttonText: "#000",
   },
   dark: {
     primary: "#38F7A7",
@@ -52,7 +52,7 @@ export default {
     info: "#38F7A7",
     infoLight: "#0F2A1E",
     overlay: "rgba(0,0,0,0.7)",
-    buttonText: "#0A2A1A",
+    buttonText: "#000",
     activeButtonText: "#000",
   },
 };

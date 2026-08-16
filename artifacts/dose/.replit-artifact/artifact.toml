@@ -1,13 +1,13 @@
 kind = "mobile"
 previewPath = "/"
-title = "Dose - Medication Reminder"
-version = "1.3.0"
+title = "Tabira - Stay on Track, Stay Healthy"
+version = "1.0.0"
 id = "artifacts/dose"
 router = "expo-domain"
 
 [[integratedSkills]]
 name = "expo"
-version = "1.3.0"
+version = "1.0.0"
 
 [[services]]
 ensurePreviewReachable = "/status"

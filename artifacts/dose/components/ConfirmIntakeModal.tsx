@@ -41,7 +41,14 @@ export default function ConfirmIntakeModal({
             <Pressable style={[styles.button, { backgroundColor: isDark ? '#444' : '#eee' }]} onPress={onClose}>
               <Text style={[styles.buttonText, { color: isDark ? "#fff" : "#222" }, isArabic(cancelText) && { fontFamily: "Tajawal_500Medium" }]}>{cancelText}</Text>
             </Pressable>
-            <Pressable style={[styles.button, styles.confirm]} onPress={onConfirm}>
+            <Pressable
+              style={[
+                styles.button,
+                styles.confirm,
+                { backgroundColor: isDark ? Colors.dark.primary : "#00ffaa" },
+              ]}
+              onPress={onConfirm}
+            >
               <Text style={[styles.buttonText, { color: "#000" }, isArabic(confirmText) && { fontFamily: "Tajawal_500Medium" }]}>{confirmText}</Text>
             </Pressable>
           </View>

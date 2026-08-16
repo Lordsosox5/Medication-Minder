@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { reloadAppAsync } from "expo";
 import React, { useState } from "react";
+import Colors from "@/constants/colors";
 import {
   Modal,
   Platform,
@@ -28,8 +29,8 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
     backgroundSecondary: isDark ? "#1C1C1E" : "#F2F2F7",
     text: isDark ? "#FFFFFF" : "#000000",
     textSecondary: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)",
-    link: "#00ffaa",
-    buttonText: "#FFFFFF",
+    link: isDark ? Colors.dark.primary : "#00ffaa",
+    buttonText: "#000000",
   };
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -97,7 +98,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
             },
           ]}
         >
-          <Text style={[styles.buttonText, { color: theme.buttonText }]}>
+          <Text style={[styles.buttonText, { color: isDark ? "#fff" : "#000" }]}>
             Try Again
           </Text>
         </Pressable>

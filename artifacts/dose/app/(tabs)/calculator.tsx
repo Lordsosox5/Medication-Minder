@@ -582,7 +582,7 @@ export default function CalculatorScreen() {
   const result = calculateDose(selected, weight);
 
   return (
-    <View style={[styles.container, { backgroundColor: C.background }]}>
+    <View style={[styles.container, { backgroundColor: C.background, direction: isRTL ? "rtl" : "ltr" }]}> 
       <View
         style={[
           styles.pageHeader,
@@ -598,10 +598,10 @@ export default function CalculatorScreen() {
         </Text>
       </View>
       <ScrollView
+        style={{ direction: isRTL ? "ltr" : "ltr" }}
         contentContainerStyle={[
           styles.content,
           { paddingBottom: insets.bottom + 150 },
-          isRTL && { direction: "rtl" },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -673,7 +673,7 @@ export default function CalculatorScreen() {
               style={[styles.searchInput, { color: C.text, fontFamily: fontReg, textAlign: isRTL ? "right" : "left" }]}
             />
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.categories, isRTL && styles.rowReverse]}>
             {categories.map((item) => {
               const active = category === item;
               return (

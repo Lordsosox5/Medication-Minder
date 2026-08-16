@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
@@ -15,23 +15,46 @@ import { t } from "@/constants/i18n";
 function NativeTabLayout() {
   const { settings } = useApp();
   const lang = settings.language;
+
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>{t("home", lang)}</Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "house", selected: "house.fill" }}
+        />
+        <NativeTabs.Trigger.Label>
+          {t("home", lang)}
+        </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="add">
-        <Icon sf={{ default: "plus.circle", selected: "plus.circle.fill" }} />
-        <Label>{t("add", lang)}</Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "plus.circle", selected: "plus.circle.fill" }}
+        />
+        <NativeTabs.Trigger.Label>
+          {t("add", lang)}
+        </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="calculator">
-        <Icon sf={{ default: "function", selected: "function" }} />
-        <Label>{t("doseCalculator", lang)}</Label>
+
+      <NativeTabs.Trigger name="tools">
+        <NativeTabs.Trigger.Icon
+          sf={{
+            default: "square.grid.2x2",
+            selected: "square.grid.2x2.fill",
+          }}
+        />
+        <NativeTabs.Trigger.Label>
+          {t("tools", lang)}
+        </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="settings">
-        <Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
-        <Label>{t("settings", lang)}</Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "gearshape", selected: "gearshape.fill" }}
+        />
+        <NativeTabs.Trigger.Label>
+          {t("settings", lang)}
+        </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -136,17 +159,18 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="calculator"
+        name="tools"
         options={{
-          title: t("doseCalculator", lang),
+          href: "/(tabs)/tools",
+          title: t("tools", lang),
           headerTitleAlign: "center",
           headerTitleStyle: { textAlign: "center" },
           tabBarIcon: ({ color }) => (
             <View style={centerTabIconStyle}>
               {isIOS ? (
-                <SymbolView name="function" tintColor={color} size={24} />
+                <SymbolView name="square.grid.2x2" tintColor={color} size={24} />
               ) : (
-                <MaterialCommunityIcons name="calculator-variant-outline" size={30} color={color} />
+                <Feather name="grid" size={28} color={color} />
               )}
             </View>
           ),
@@ -167,6 +191,55 @@ function ClassicTabLayout() {
               )}
             </View>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="monitoring"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="calculator"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="bmi"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="tdee"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="water"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="idealweight"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="pregnancy"
+        options={{
+          href: null,
+          headerShown: false,
         }}
       />
     </Tabs>

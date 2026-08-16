@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -8,19 +8,27 @@ import {
   Pressable,
   Platform,
   Alert,
+  PanResponder,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import Colors from "@/constants/colors";
 import { t } from "@/constants/i18n";
 import { useApp, type MedicationType, type RouteType } from "@/context/AppContext";
-import { showInterstitial, loadInterstitial } from "@/services/unity-ads";
 import { SafeAreaView } from "react-native-safe-area-context";
-const INTERVALS = [2, 4, 6, 8, 12, 24];
+const INTERVALS = [0.5, 1, 2, 4, 6, 8, 12, 24];
+
+const formatIntervalLabel = (value: number, isArabic = false) => {
+  if (value === 0.5) return isArabic ? "30 د" : "30 min";
+  if (value >= 1 && Number.isInteger(value)) return isArabic ? `${value} س` : `${value} h`;
+  return isArabic ? `${value} س` : `${value} h`;
+};
 
 type FormData = {
   name: string;
@@ -50,6 +58,9 @@ export default function AddScreen() {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [showPicker, setShowPicker] = useState(false);
+  const [pickerMode, setPickerMode] = useState<"date" | "time" | null>(null);
+  const [sliderWidth, setSliderWidth] = useState(220);
+  const dragStartIndexRef = useRef<number | null>(null);
   const { editId } = useLocalSearchParams<{ editId?: string }>();
   const isEditing = !!editId;
   const lang = settings.language;
@@ -59,7 +70,7 @@ export default function AddScreen() {
   const fontMed = isRTL ? "Tajawal_500Medium" : "Inter_500Medium";
   const fontReg = isRTL ? "Tajawal_400Regular" : "Inter_400Regular";
   const C = isDark ? Colors.dark : Colors.light;
-  const activeButtonText = isDark ? Colors.dark.activeButtonText : "#fff";
+  const activeButtonText = "#000";
 
   // Reset form state when editId changes
   useEffect(() => {
@@ -133,7 +144,7 @@ export default function AddScreen() {
       justifyContent: "center",
     },
     content: { padding: 16, gap: 8 },
-    section: { gap: 8, marginBottom: 8 },
+    section: { gap: 12, marginBottom: 12 },
     sectionLabel: { fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5 },
     input: {
       borderWidth: 1,
@@ -168,21 +179,56 @@ export default function AddScreen() {
       borderRadius: 20,
     },
     chipText: { fontSize: 13 },
-    intervalGrid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 10,
+    intervalSlider: {
+      position: "relative",
+      width: "100%",
+      minHeight: 90,
+      justifyContent: "center",
+      paddingBottom: 8,
     },
-    intervalChip: {
-      borderRadius: 14,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
+    intervalTrack: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      top: 34,
+      height: 20,
+      borderRadius: 999,
+      backgroundColor: C.surfaceSecondary,
+      borderWidth: 1,
+      borderColor: C.border,
+    },
+    intervalFill: {
+      position: "absolute",
+      top: 34,
+      height: 20,
+      borderRadius: 999,
+      backgroundColor: C.primary,
+    },
+    intervalThumb: {
+      position: "absolute",
+      top: 22,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: C.primary,
+      borderWidth: 4,
+      borderColor: C.surface,
+    },
+    intervalLabels: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 90,
+      alignItems: "stretch",
+    },
+    intervalLabel: {
+      position: "absolute",
+      width: 54,
       alignItems: "center",
-      minWidth: 90,
-      flex: 1,
+      justifyContent: "center",
     },
-    intervalChipText: { fontSize: 18 },
-    intervalChipSub: { fontSize: 10, marginTop: 2, textAlign: "center" },
+    intervalLabelText: { fontSize: 13, letterSpacing: 0.1 },
     footer: {
       paddingHorizontal: 16,
       paddingTop: 12,
@@ -243,13 +289,12 @@ export default function AddScreen() {
         intervalHours: form.intervalHours,
         startTime: startIso,
         notes: form.notes.trim(),
+        missedCount: 0,
       });
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    await showInterstitial();
-    loadInterstitial();
-    // Force navigation to the home page tab
-    router.replace("/(tabs)");
+    // Navigate back to the medications tab after save
+    await router.replace("/(tabs)");
   };
 
   const handleDelete = () => {
@@ -262,11 +307,12 @@ export default function AddScreen() {
         {
           text: t("delete", lang),
           style: "destructive",
-          onPress: async () => {
-            await deleteMedication(editId);
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push("/(tabs)");
-          },
+            onPress: async () => {
+              await deleteMedication(editId);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              // Navigate back to the medications tab after delete
+              await router.replace("/(tabs)");
+            },
         },
       ]
     );
@@ -307,20 +353,94 @@ export default function AddScreen() {
   );
 
   // Move openPicker function here, before return
-  const openPicker = () => {
+  const openDatePicker = () => {
     if (Platform.OS === "android") {
       DateTimePickerAndroid.open({
         value: form.startTime,
         mode: "date",
         is24Hour: true,
-        onChange: (event, selectedDate) => {
+        onChange: (_event: DateTimePickerEvent, selectedDate?: Date) => {
           if (selectedDate) update("startTime", selectedDate);
         },
       });
-    } else {
-      setShowPicker(true); // iOS only
+      return;
     }
+
+    setPickerMode("date");
+    setShowPicker(true);
   };
+
+  const openTimePicker = () => {
+    if (Platform.OS === "android") {
+      DateTimePickerAndroid.open({
+        value: form.startTime,
+        mode: "time",
+        is24Hour: true,
+        onChange: (_event: DateTimePickerEvent, selectedDate?: Date) => {
+          if (selectedDate) update("startTime", selectedDate);
+        },
+      });
+      return;
+    }
+
+    setPickerMode("time");
+    setShowPicker(true);
+  };
+
+  const formatDatePart = (date: Date) =>
+    date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+
+  const formatTimePart = (date: Date) =>
+    date.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
+  const currentIntervalIndex = INTERVALS.indexOf(form.intervalHours);
+  const trackWidth = Math.max(0, sliderWidth - 40);
+  const sliderProgress = currentIntervalIndex / Math.max(1, INTERVALS.length - 1);
+  const selectedIntervalPosition = sliderProgress * trackWidth;
+  const thumbLeft = selectedIntervalPosition;
+  const fillWidth = selectedIntervalPosition + 20;
+
+  const getNormalizedProgress = (locationX?: number) => {
+    if (!trackWidth) return 0;
+
+    const touchX = typeof locationX === "number" ? locationX : sliderWidth / 2;
+    const thumbCenter = Math.min(Math.max(touchX, 20), sliderWidth - 20);
+    const thumbRelative = Math.min(trackWidth, Math.max(0, thumbCenter - 20));
+    return thumbRelative / trackWidth;
+  };
+
+  const updateIntervalFromLocationX = (locationX?: number) => {
+    const nextIndex = Math.round(getNormalizedProgress(locationX) * (INTERVALS.length - 1));
+    update("intervalHours", INTERVALS[nextIndex]);
+  };
+
+  const intervalSliderResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (event) => {
+        dragStartIndexRef.current = currentIntervalIndex;
+        updateIntervalFromLocationX(event.nativeEvent.locationX);
+      },
+      onPanResponderMove: (event) => {
+        updateIntervalFromLocationX(event.nativeEvent.locationX);
+      },
+      onPanResponderRelease: () => {
+        dragStartIndexRef.current = null;
+      },
+      onPanResponderTerminate: () => {
+        dragStartIndexRef.current = null;
+      },
+    })
+  ).current;
 
   return (
     <View style={[styles.container, { backgroundColor: C.background, direction: isRTL ? 'rtl' : 'ltr' }]}> 
@@ -412,13 +532,13 @@ export default function AddScreen() {
                 <MaterialCommunityIcons
                   name={tp === "pill" ? "pill" : "needle"}
                   size={18}
-                  color={form.type === tp ? activeButtonText : C.textSecondary}
+                  color={form.type === tp ? "#000" : C.textSecondary}
                 />
                 <Text
                   style={[
                     styles.segmentText,
                     {
-                      color: form.type === tp ? activeButtonText : C.textSecondary,
+                      color: form.type === tp ? "#000" : C.textSecondary,
                       fontFamily: fontMed,
                     },
                   ]}
@@ -463,7 +583,7 @@ export default function AddScreen() {
                 <Text
                   style={[
                     styles.chipText,
-                    { color: form.route === r ? activeButtonText : C.textSecondary, fontFamily: fontMed },
+                    { color: form.route === r ? "#000" : C.textSecondary, fontFamily: fontMed },
                   ]}
                 >
                   {t(r, lang)}
@@ -475,60 +595,99 @@ export default function AddScreen() {
 
         <View style={styles.section}>
           <SectionLabel label={t("interval", lang)} />
-          <View style={styles.intervalGrid}>
-            {INTERVALS.map((h) => (
-              <Pressable
-                key={h}
-                style={[
-                  styles.intervalChip,
-                  form.intervalHours === h
-                    ? { backgroundColor: C.primary }
-                    : { backgroundColor: C.surfaceSecondary, borderColor: C.border, borderWidth: 1 },
-                ]}
-                onPress={() => update("intervalHours", h)}
-              >
-                <Text
-                  style={[
-                    styles.intervalChipText,
-                    { color: form.intervalHours === h ? activeButtonText : C.text, fontFamily: fontBold },
-                  ]}
-                >
-                  {h}h
-                </Text>
-                <Text
-                  style={[
-                    styles.intervalChipSub,
-                    { color: form.intervalHours === h ? activeButtonText : C.textMuted, fontFamily: fontReg },
-                  ]}
-                >
-                  {t(`every${h}h` as any, lang) || `every ${h}h`}
-                </Text>
-              </Pressable>
-            ))}
+          <View
+              style={[styles.intervalSlider, { direction: 'ltr' }]}
+            {...intervalSliderResponder.panHandlers}
+            onLayout={(event) => {
+              setSliderWidth(Math.max(220, event.nativeEvent.layout.width));
+            }}
+          >
+            <View style={styles.intervalTrack} />
+            <View
+              style={[
+                styles.intervalFill,
+                { width: fillWidth, left: 0 },
+              ]}
+            />
+            <View
+              style={[
+                styles.intervalThumb,
+                { left: thumbLeft },
+              ]}
+            />
+
+            <View style={styles.intervalLabels} pointerEvents="none">
+              {INTERVALS.map((h, index) => {
+                const trackSpan = Math.max(0, sliderWidth - 40);
+                const x = (index / Math.max(1, INTERVALS.length - 1)) * trackSpan;
+                const isUpper = index % 2 === 0;
+                return (
+                  <Pressable
+                    key={h}
+                    onPress={() => update("intervalHours", h)}
+                    style={[
+                      styles.intervalLabel,
+                      { left: x + 20 - 27, top: isUpper ? 4 : 62 },
+                    ]}
+                    pointerEvents="auto"
+                  >
+                    <Text
+                      style={[
+                        styles.intervalLabelText,
+                        {
+                          color: form.intervalHours === h ? C.text : C.textMuted,
+                          fontFamily: form.intervalHours === h ? fontBold : fontReg,
+                        },
+                      ]}
+                    >
+                      {formatIntervalLabel(h, isRTL)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         </View>
 
         <View style={styles.section}>
-        <SectionLabel label={t("startTime", lang)} />
+          <SectionLabel label={t("startTime", lang)} />
 
-        <Pressable style={inputStyle()} onPress={openPicker}>
-          <Text style={{ color: C.text, fontFamily: fontReg }}>
-            {toLocalDateTimeString(form.startTime)}   {/* format for display */}
-          </Text>
-        </Pressable>
-        {showPicker && (
-          <DateTimePicker
-            value={form.startTime}
-            mode="datetime"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, selectedDate) => {
-              setShowPicker(false);
-              if (selectedDate) {
-                update("startTime", selectedDate);
-              }
-            }}
-          />
-        )}
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <Pressable
+              style={[inputStyle(), { flex: 1, flexDirection: "row", alignItems: "center" }]}
+              onPress={openDatePicker}
+            >
+              <Feather name="calendar" size={16} color={C.textSecondary} style={{ marginRight: 8 }} />
+              <Text style={{ color: C.text, fontFamily: fontReg, flexShrink: 1 }}>
+                {formatDatePart(form.startTime)}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={[inputStyle(), { flex: 1, flexDirection: "row", alignItems: "center" }]}
+              onPress={openTimePicker}
+            >
+              <Feather name="clock" size={16} color={C.textSecondary} style={{ marginRight: 8 }} />
+              <Text style={{ color: C.text, fontFamily: fontReg, flexShrink: 1 }}>
+                {formatTimePart(form.startTime)}
+              </Text>
+            </Pressable>
+          </View>
+
+          {showPicker && (
+            <DateTimePicker
+              value={form.startTime}
+              mode={pickerMode === "time" ? "time" : "date"}
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={(_event: DateTimePickerEvent, selectedDate?: Date) => {
+                setShowPicker(false);
+                setPickerMode(null);
+                if (selectedDate) {
+                  update("startTime", selectedDate);
+                }
+              }}
+            />
+          )}
         </View>
 
         <View style={styles.section}>
@@ -552,7 +711,7 @@ export default function AddScreen() {
             ]}
             onPress={handleSave}
           >
-            <Feather name="check" size={20} color={activeButtonText} />
+            <Feather name="check" size={20} color="#000" />
             <Text style={[styles.saveBtnText, { fontFamily: fontBold }]}> 
               {t("saveMedication", lang)}
             </Text>

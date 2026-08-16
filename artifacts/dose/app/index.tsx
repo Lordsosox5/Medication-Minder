@@ -27,6 +27,7 @@ export default function SplashScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.7)).current;
   const taglineFade = useRef(new Animated.Value(0)).current;
+  const dotsDelayedFade = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -66,13 +67,23 @@ export default function SplashScreen() {
         ])
       ).start();
     });
+    // Start loading dots fade-in after 2 seconds
+    Animated.timing(dotsDelayedFade, {
+      toValue: 1,
+      duration: 500,
+      delay: 2000,
+      useNativeDriver: ND,
+    }).start();
     // Check onboarding status
     (async () => {
       try {
-        const seen = await AsyncStorage.getItem("onboardingComplete");
+        const onboardingSeen = await AsyncStorage.getItem("onboardingComplete");
+        const setupSeen = await AsyncStorage.getItem("setupComplete");
         setOnboardingChecked(true);
-        if (!seen) {
-          setTimeout(() => router.replace("/onboarding"), 1200);
+        if (!onboardingSeen) {
+          setTimeout(() => router.replace("/onboarding"), 5000);
+        } else if (!setupSeen) {
+          setTimeout(() => router.replace("/onboarding/welcome"), 3000);
         }
       } catch {
         setOnboardingChecked(true);
@@ -83,11 +94,12 @@ export default function SplashScreen() {
   useEffect(() => {
     if (!loaded || !onboardingChecked) return;
     (async () => {
-      const seen = await AsyncStorage.getItem("onboardingComplete");
-      if (seen) {
+      const onboardingSeen = await AsyncStorage.getItem("onboardingComplete");
+      const setupSeen = await AsyncStorage.getItem("setupComplete");
+      if (onboardingSeen && setupSeen) {
         const timer = setTimeout(() => {
           router.replace("/(tabs)");
-        }, 1200);
+        }, 3000);
         return () => clearTimeout(timer);
       }
     })();
@@ -120,7 +132,7 @@ export default function SplashScreen() {
             },
           ]}
         >
-          <MaterialCommunityIcons name="pill" size={56} color="#fff" />
+          <MaterialCommunityIcons name="pill" size={56} color="#000" />
         </Animated.View>
 
         <Animated.Text
@@ -151,7 +163,7 @@ export default function SplashScreen() {
         </Animated.Text>
       </View>
 
-      <Animated.View style={[styles.dotsContainer, { opacity: taglineFade }]}>
+      <Animated.View style={[styles.dotsContainer, { opacity: dotsDelayedFade }]}>
         {[0, 1, 2].map((i) => (
           <View
             key={i}

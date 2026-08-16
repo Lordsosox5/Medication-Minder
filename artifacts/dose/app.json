@@ -7,17 +7,27 @@
     "icon": "./assets/images/icon.png",
     "scheme": "tabira",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": false
-    },
-    "android": {
-      "package": "com.tabira.medreminder",
-      "notification": {
-        "sound": [
-          "notify.wav"
+      "supportsTablet": false,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
         ]
       }
+    },
+    "android": {
+      "package": "com.tabira.app",
+      "permissions": [
+        "WAKE_LOCK",
+        "RECEIVE_BOOT_COMPLETED",
+        "FOREGROUND_SERVICE",
+        "SCHEDULE_EXACT_ALARM",
+        "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
+        "USE_FULL_SCREEN_INTENT",
+        "SYSTEM_ALERT_WINDOW",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -29,10 +39,17 @@
           "origin": "https://replit.com/"
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/notify.wav"
+          ]
+        }
+      ],
+      "./plugins/withMedicationAlarm.js",
       "expo-font",
-      "expo-web-browser",
-      "expo-notifications",
-      "@react-native-community/datetimepicker"
+      "expo-web-browser"
     ],
     "splash": {
       "image": "./assets/images/splash-icon.png",
@@ -48,7 +65,7 @@
         "origin": "https://replit.com/"
       },
       "eas": {
-        "projectId": "665cd7e9-5004-4bd8-84a9-33fb1e01e4d8"
+        "projectId": "9cb0dcd4-fd4b-40a7-9771-8bc529d5192b"
       }
     }
   }

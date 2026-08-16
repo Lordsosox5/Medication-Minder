@@ -17,7 +17,6 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import UnityAdBanner from "@/components/UnityAdBanner";
 import ConfirmIntakeModal from "@/components/ConfirmIntakeModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,9 +25,7 @@ import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import Colors from "@/constants/colors";
-import * as Notifications from "expo-notifications";
-import { showInterstitial, loadInterstitial } from "@/services/unity-ads";
-import { t } from "@/constants/i18n";
+import { t, formatIntervalLabel } from "@/constants/i18n";
 import {
   useApp,
   getMedicationStatus,
@@ -99,6 +96,7 @@ function MedicationCard({
   const fontFamily = (txt: string) => lang === "ar" || isArabic(txt) ? "Tajawal_500Medium" : "Inter_500Medium";
   const fontBold = (txt: string) => lang === "ar" || isArabic(txt) ? "Tajawal_700Bold" : "Inter_700Bold";
   const fontReg = (txt: string) => lang === "ar" || isArabic(txt) ? "Tajawal_400Regular" : "Inter_400Regular";
+  const fontMed = lang === "ar" ? "Tajawal_500Medium" : "Inter_500Medium";
 
   const statusColors: Record<MedicationStatus, string> = {
     upcoming: C.info,
@@ -167,12 +165,21 @@ function MedicationCard({
             {med.name}
           </Text>
           <Text
-            style={[styles.cardMeta, { color: C.textSecondary, fontFamily: fontReg(`${med.doseAmount} · ${t(med.route as any, lang)} · ${t(`every${med.intervalHours}h` as any, lang)}`) }]}
+            style={[styles.cardMeta, { color: C.textSecondary, fontFamily: fontReg(`${med.doseAmount} · ${t(med.route as any, lang)} · ${formatIntervalLabel(med.intervalHours, lang)}`) }]}
           >
-            {med.doseAmount} · {t(med.route as any, lang)} · {t(`every${med.intervalHours}h` as any, lang) || `${med.intervalHours}h`}
+            {med.doseAmount} · {t(med.route as any, lang)} · {formatIntervalLabel(med.intervalHours, lang)}
           </Text>
         </View>
-        <StatusBadge status={status} C={C} lang={lang} />
+        <View style={styles.badgeGroup}>
+          <StatusBadge status={status} C={C} lang={lang} />
+          {med.missedCount > 0 && (
+            <View style={[styles.missedBadge, { backgroundColor: C.dangerLight }]}> 
+              <Text style={[styles.missedBadgeText, { color: C.danger, fontFamily: fontMed }]}> 
+                {med.missedCount}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.progressContainer}>
@@ -268,7 +275,7 @@ function MedicationCard({
 
 
 export default function HomeScreen() {
-  const { medications, settings, isDark, confirmIntake, deleteMedication, tick } = useApp();
+  const { medications, settings, isDark, confirmIntake, deleteMedication, tick, notificationAction, clearNotificationAction, delayMedication } = useApp();
   const C = isDark ? Colors.dark : Colors.light;
   const lang = settings.language;
   const isRTL = lang === "ar";
@@ -331,61 +338,42 @@ export default function HomeScreen() {
 
 
   // Schedule notifications for finish time and due_now status
-  React.useEffect(() => {
-    if (Platform.OS === "web") return;
-    Notifications.cancelAllScheduledNotificationsAsync();
-    filtered.forEach((med: Medication) => {
-      const status = getMedicationStatus(med);
-      // Schedule finish time notification
-      if (med.nextDueAt) {
-        const finishTime = new Date(med.nextDueAt).getTime();
-        const now = Date.now();
-        if (finishTime > now) {
-          Notifications.scheduleNotificationAsync({
-            content: {
-              title: "حان وقت الدواء",
-              body: `${med.name} وقته الان!`,
-              sound: "notify.wav",
-            },
-            trigger: { type: 'timeInterval', seconds: Math.floor((finishTime - now) / 1000), repeats: false } as any,
-          });
-        }
-      }
-      // Schedule due_now (yellow) notification if not already due_now/overdue
-      if (status !== "due_now" && status !== "overdue" && med.nextDueAt) {
-        const dueNowTime = new Date(med.nextDueAt).getTime() - 30 * 60 * 1000; // 30 min before due
-        const now = Date.now();
-        if (dueNowTime > now) {
-          Notifications.scheduleNotificationAsync({
-            content: {
-              title: "أقترب موعد الدواء",
-              body: `${med.name} بقي 30 دقيقة على موعده!`,
-              sound: "notify.wav",
-            },
-            trigger: { type: 'timeInterval', seconds: Math.floor((dueNowTime - now) / 1000), repeats: false } as any,
-          });
-        }
-      }
-    });
-  }, [filtered, tick]);
 
   const [confirmModal, setConfirmModal] = useState<{ visible: boolean; id: string | null }>({ visible: false, id: null });
   const handleConfirm = useCallback((id: string) => {
     setConfirmModal({ visible: true, id });
   }, []);
-  const handleModalClose = () => setConfirmModal({ visible: false, id: null });
-  const handleModalConfirm = async () => {
-    if (confirmModal.id) {
-      await confirmIntake(confirmModal.id);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
+  const handleModalClose = () => {
     setConfirmModal({ visible: false, id: null });
+    clearNotificationAction();
+  };
+  const handleModalConfirm = async () => {
+    try {
+      if (confirmModal.id) {
+        await confirmIntake(confirmModal.id);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (err) {
+      console.warn('confirmIntake failed', err);
+    } finally {
+      setConfirmModal({ visible: false, id: null });
+      clearNotificationAction();
+    }
     await new Promise((resolve) => setTimeout(resolve, 350));
-    await showInterstitial();
-    loadInterstitial();
   };
 
   const [deleteModal, setDeleteModal] = useState<{ visible: boolean; id: string | null }>({ visible: false, id: null });
+
+  useEffect(() => {
+    if (!notificationAction) return;
+    const { medId, type } = notificationAction;
+    if (type === "confirm") {
+      setConfirmModal({ visible: true, id: medId });
+    } else if (type === "delay") {
+      delayMedication(medId, 5);
+      clearNotificationAction();
+    }
+  }, [notificationAction, delayMedication, clearNotificationAction]);
   const handleDelete = useCallback((id: string) => {
     setDeleteModal({ visible: true, id });
   }, []);
@@ -397,8 +385,6 @@ export default function HomeScreen() {
     }
     setDeleteModal({ visible: false, id: null });
     await new Promise((resolve) => setTimeout(resolve, 350));
-    await showInterstitial();
-    loadInterstitial();
   };
 
   // The edit page is not shown in the main menu; only accessible from the edit button on each medication card
@@ -408,6 +394,8 @@ export default function HomeScreen() {
 
   const webTopPadding = Platform.OS === "web" ? 67 : 0;
   const webBottomPadding = Platform.OS === "web" ? 34 : 0;
+
+  // Navigation bar customization removed - transparent bars are used instead
 
   const filterChips: Array<{ key: FilterMode; label: string }> = [
     { key: "all", label: t("all", lang) },
@@ -419,7 +407,7 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}> 
-      <StatusBar style={isDark ? "light" : "dark"} backgroundColor={C.background} translucent={false} />
+      <StatusBar style={isDark ? "light" : "dark"} backgroundColor="transparent" translucent={true} />
       <DeleteConfirmModal
         visible={deleteModal.visible}
         onClose={handleDeleteModalClose}
@@ -463,7 +451,7 @@ export default function HomeScreen() {
     <Text
       style={[
         styles.headerSubtitle,
-        { color: C.textSecondary, fontFamily: fontReg }
+        { color: C.text, fontFamily: fontReg }
       ]}
     >
       {overallCounts.total} {t("active", lang)}
@@ -485,12 +473,12 @@ export default function HomeScreen() {
                 onPress={() => { setSortMode(s); setShowSort(false); }}
               >
                 <Text style={[styles.sortOptionText, {
-                  color: sortMode === s ? C.primary : C.text,
+                  color: sortMode === s ? "#000" : C.text,
                   fontFamily: fontMed,
                 }]}>
                   {s === "next_due" ? t("sortNextDue", lang) : s === "overdue_first" ? t("sortOverdueFirst", lang) : t("sortAlphabetical", lang)}
                 </Text>
-                {sortMode === s && <Feather name="check" size={14} color={C.primary} />}
+                {sortMode === s && <Feather name="check" size={14} color="#000" />}
               </Pressable>
             ))}
           </View>
@@ -540,7 +528,7 @@ export default function HomeScreen() {
               <Text
                 style={[
                   styles.filterChipText,
-                  { color: filter === key ? "#fff" : C.textSecondary, fontFamily: fontMed },
+                  { color: filter === key ? "#000" : C.textSecondary, fontFamily: fontMed },
                 ]}
               >
                 {label}
@@ -588,14 +576,14 @@ export default function HomeScreen() {
               ]}
               onPress={() => router.push({ pathname: "/(tabs)/add", params: {} })}
             >
-              <Feather name="plus" size={16} color="#fff" />
+              <Feather name="plus" size={16} color="#000" />
               <Text style={[styles.emptyBtnText, { fontFamily: fontMed }]}>
                 {t("addFirstMed", lang)}
               </Text>
             </Pressable>
           </View>
         }
-        ListFooterComponent={<UnityAdBanner />}
+        ListFooterComponent={null}
       />
     </View>
   );
@@ -660,7 +648,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
   },
-  filterChipText: { fontSize: 12 },
+  filterChipText: { fontSize: 11 },
   listContent: { padding: 16, gap: 12 },
   card: {
     borderRadius: 16,
@@ -677,6 +665,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
+  missedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  missedBadgeText: { fontSize: 12 },
   cardIcon: {
     width: 40,
     height: 40,
@@ -687,6 +683,11 @@ const styles = StyleSheet.create({
   cardTitleGroup: { flex: 1, gap: 3 },
   cardName: { fontSize: 16 },
   cardMeta: { fontSize: 12 },
+  badgeGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -761,5 +762,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginTop: 8,
   },
-  emptyBtnText: { color: "#fff", fontSize: 15 },
+  emptyBtnText: { color: "#000", fontSize: 15 },
 });

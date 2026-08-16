@@ -1,14 +1,46 @@
 export type Language = "en" | "ar";
 
+export function formatIntervalLabel(hours: number, lang: Language) {
+  if (lang === "ar") {
+    if (hours === 0.5) return "كل نص ساعة";
+    if (hours === 1) return "كل ساعة";
+    if (hours === 2) return "كل ساعتين";
+    if (hours === 4) return "كل ٤ ساعات";
+    if (hours === 6) return "كل ٦ ساعات";
+    if (hours === 8) return "كل ٨ ساعات";
+    if (hours === 12) return "كل ١٢ ساعة";
+    if (hours === 24) return "كل ٢٤ ساعة";
+    return `كل ${hours} ساعة`;
+  }
+
+  if (hours === 0.5) return "Every half hour";
+  if (hours === 1) return "Every hour";
+  return `Every ${hours} hours`;
+}
+
 export const translations = {
   en: {
     appName: "Tabira",
     tagline: "Never miss a dose",
     home: "Home",
     add: "Add",
+    tools: "Tools",
     settings: "Settings",
+    dosesMonitoringTracking: "Doses monitoring and tracking",
     doseCalculator: "Calculator",
-    doseCalculatorTitle: "Dose Calculator",
+    bmiCalculator: "BMI Calculator",
+    dailyCalorieTdee: "Daily Calorie / TDEE",
+    bmiTitle: "BMI Calculator",
+    heightCm: "Height (cm)",
+    bmiResult: "BMI Result",
+    bmiCategory: "Category",
+    calculate: "Calculate",
+    clear: "Clear",
+    underweight: "Underweight",
+    healthy: "Healthy",
+    overweight: "Overweight",
+    obese: "Obese",
+    doseCalculatorTitle: "Pediatrics Dose Calculator",
     weightKg: "Weight (kg)",
     weightPlaceholder: "Enter child weight",
     searchDrug: "Search medicine...",
@@ -63,12 +95,6 @@ export const translations = {
     inhalation: "Inhalation",
     other: "Other",
     interval: "Recurrence Interval",
-    every2h: "Every 2 hours",
-    every4h: "Every 4 hours",
-    every6h: "Every 6 hours",
-    every8h: "Every 8 hours",
-    every12h: "Every 12 hours",
-    every24h: "Every 24 hours",
     startTime: "First Dose Time",
     notes: "Notes (Optional)",
     notesPlaceholder: "e.g. Take after food, before sleep",
@@ -91,7 +117,14 @@ export const translations = {
     notificationsEnabled: "Notifications Enabled",
     notificationsDisabled: "Notifications Disabled",
     openSettings: "Open Settings",
+    batteryOptimization: "Battery Optimization",
+    batteryOptimizationDesc: "Override battery saving to keep notifications reliable",
+    openBatterySettings: "Open Battery Settings",
+    termsOfService: "Terms of Service",
+    privacyPolicy: "Privacy Policy",
     about: "About",
+    developer: "Developer",
+    developerName: "Tabira Labs",
     version: "Version",
     description: "Smart recurring medication reminders",
     totalActive: "Active",
@@ -128,7 +161,21 @@ export const translations = {
     home: "الرئيسية",
     add: "إضافة",
     settings: "الإعدادات",
-    doseCalculator: "الحاسبة",
+    tools: "الأدوات",
+    dosesMonitoringTracking: "مراقبة وتتبع الجرعات",
+    doseCalculator: "حاسبة جرعات الاطفال",
+    bmiCalculator: "حاسبة BMI",
+    dailyCalorieTdee: "السعرات اليومية / TDEE",
+    bmiTitle: "حاسبة BMI",
+    heightCm: "الطول (سم)",
+    bmiResult: "نتيجة BMI",
+    bmiCategory: "الفئة",
+    calculate: "احسب",
+    clear: "مسح",
+    underweight: "نحيف",
+    healthy: "طبيعي",
+    overweight: "وزن زائد",
+    obese: "بدين",
     doseCalculatorTitle: "حاسبة الجرعات",
     weightKg: "الوزن (كجم)",
     weightPlaceholder: "أدخل وزن الطفل",
@@ -184,12 +231,6 @@ export const translations = {
     inhalation: "استنشاق",
     other: "أخرى",
     interval: "تكرار الجرعة",
-    every2h: "كل ساعتين",
-    every4h: "كل ٤ ساعات",
-    every6h: "كل ٦ ساعات",
-    every8h: "كل ٨ ساعات",
-    every12h: "كل ١٢ ساعة",
-    every24h: "كل ٢٤ ساعة",
     startTime: "وقت الجرعة الأولى",
     notes: "ملاحظات (اختياري)",
     notesPlaceholder: "مثال: بعد الأكل، قبل النوم",
@@ -212,9 +253,16 @@ export const translations = {
     notificationsEnabled: "الإشعارات مفعّلة",
     notificationsDisabled: "الإشعارات معطّلة",
     openSettings: "فتح الإعدادات",
+    batteryOptimization: "تشغيل في الخلفية",
+    batteryOptimizationDesc:"ضمان وصول التنبيهات في وقتها",
+    openBatterySettings: "فتح الإعدادات",
+    termsOfService: "شروط الخدمة",
+    privacyPolicy: "سياسة الخصوصية",
     about: "حول التطبيق",
+    developer: "المطور",
+    developerName: "تابيرا لابز",
     version: "الإصدار",
-    description: "تطبيقك الذكي لتذكيرك بالجرعات في وقتها",
+    description: "تطبيقك الذكي لتذكيرك بالجرعات في وقتها!",
     totalActive: "نشطة",
     confirmTakenTitle: "تأكيد الجرعة",
     confirmTakenMsg: "هل أخذت هذه الجرعة الآن؟",

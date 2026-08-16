@@ -32,14 +32,21 @@ export default function DeleteConfirmModal({
     >
       <View style={styles.overlay}>
         <View style={[styles.modal, { backgroundColor: isDark ? Colors.dark.surface : Colors.light.surface }]}> 
-          <Text style={[styles.title, { color: isDark ? "#fff" : "#222", fontFamily: "Tajawal_700Bold" }]}>{title}</Text>
-          <Text style={[styles.message, { color: isDark ? "#ccc" : "#444", fontFamily: "Tajawal_400Regular" }]}>{message}</Text>
+          <Text style={[styles.title, { color: isDark ? "#fff" : "#222" }, !!title && /[\u0600-\u06FF]/.test(title) && { fontFamily: "Tajawal_700Bold" }]}>{title}</Text>
+          <Text style={[styles.message, { color: isDark ? "#ccc" : "#444" }, !!message && /[\u0600-\u06FF]/.test(message) && { fontFamily: "Tajawal_400Regular" }]}>{message}</Text>
           <View style={styles.actions}>
             <Pressable style={[styles.button, { backgroundColor: isDark ? '#444' : '#eee' }]} onPress={onClose}>
-              <Text style={[styles.buttonText, { color: isDark ? "#fff" : "#222", fontFamily: "Tajawal_500Medium" }]}>{cancelText}</Text>
+              <Text style={[styles.buttonText, { color: isDark ? "#fff" : "#222" }, !!cancelText && /[\u0600-\u06FF]/.test(cancelText) && { fontFamily: "Tajawal_500Medium" }]}>{cancelText}</Text>
             </Pressable>
-            <Pressable style={[styles.button, styles.delete]} onPress={onDelete}>
-              <Text style={[styles.buttonText, { color: "#fff", fontFamily: "Tajawal_500Medium" }]}>{deleteText}</Text>
+            <Pressable
+              style={[
+                styles.button,
+                styles.delete,
+                { backgroundColor: isDark ? Colors.dark.danger : '#e74c3c' },
+              ]}
+              onPress={onDelete}
+            >
+              <Text style={[styles.buttonText, { color: "#000" }, !!deleteText && /[\u0600-\u06FF]/.test(deleteText) && { fontFamily: "Tajawal_500Medium" }]}>{deleteText}</Text>
             </Pressable>
           </View>
         </View>
@@ -86,6 +93,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 42,
     borderRadius: 20,
+    minWidth: 118,
+    alignItems: "center",
+    justifyContent: "center",
   },
   cancel: {
     backgroundColor: "#eee",
