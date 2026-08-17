@@ -160,3 +160,4 @@ overrides:
 
 allowBuilds:
   esbuild: false
+  protobufjs: true

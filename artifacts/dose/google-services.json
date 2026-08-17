@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "565754688319",
+    "project_id": "tabira-7d7dd",
+    "storage_bucket": "tabira-7d7dd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565754688319:android:0fe00dee93979e995a998a",
+        "android_client_info": {
+          "package_name": "com.tabira.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8ygdVijOV8fkrNh9c0zXxQCcdRgRY-3M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

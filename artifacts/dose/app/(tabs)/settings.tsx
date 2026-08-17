@@ -658,6 +658,7 @@ const openNotificationSettings = async () => {
               />
             }
           />
+
         </View>
 
         <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }]}>

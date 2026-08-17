@@ -1,0 +1,71 @@
+{
+  "analytics_config": {
+    "project_id": "tabira-7d7dd",
+    "measurement_id": "G-MEASUREMENT_ID",
+    "api_secret": "YOUR_ANALYTICS_API_SECRET",
+    "enabled": true,
+    "debug_mode": false,
+    "session_timeout_seconds": 1800
+  },
+  "tracked_events": {
+    "app_lifecycle": [
+      "app_open",
+      "app_close",
+      "app_crash",
+      "session_start",
+      "session_end"
+    ],
+    "medication_events": [
+      "medication_added",
+      "medication_deleted",
+      "medication_edited",
+      "medication_intake_confirmed",
+      "medication_intake_missed",
+      "medication_intake_snoozed",
+      "medication_alarm_triggered",
+      "medication_alarm_dismissed"
+    ],
+    "health_tools": [
+      "bmi_calculated",
+      "ideal_weight_calculated",
+      "tdee_calculated",
+      "water_intake_logged",
+      "pregnancy_info_viewed"
+    ],
+    "user_interactions": [
+      "screen_viewed",
+      "settings_changed",
+      "notification_permission_granted",
+      "notification_permission_denied",
+      "alarm_permission_granted",
+      "alarm_permission_denied",
+      "onboarding_started",
+      "onboarding_completed"
+    ],
+    "technical_metrics": [
+      "api_call_success",
+      "api_call_failed",
+      "database_sync_success",
+      "database_sync_failed",
+      "notification_sent",
+      "notification_failed"
+    ]
+  },
+  "custom_dimensions": [
+    "user_id",
+    "app_version",
+    "device_platform",
+    "os_version",
+    "locale",
+    "medication_count",
+    "daily_intake_schedule",
+    "reminder_type"
+  ],
+  "custom_metrics": [
+    "medication_intake_completion_rate",
+    "average_medications_per_user",
+    "daily_active_users",
+    "user_retention_rate",
+    "feature_usage_frequency"
+  ]
+}
