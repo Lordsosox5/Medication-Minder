@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tabira",
     "slug": "tabira",
-    "version": "1.6.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tabira",
@@ -18,10 +18,12 @@
     },
     "android": {
       "package": "com.tabira.app",
+      "versionCode": 2,
       "permissions": [
         "WAKE_LOCK",
         "RECEIVE_BOOT_COMPLETED",
         "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_SPECIAL_USE",
         "SCHEDULE_EXACT_ALARM",
         "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
         "USE_FULL_SCREEN_INTENT",
@@ -65,7 +67,7 @@
         "origin": "https://replit.com/"
       },
       "eas": {
-        "projectId": "9cb0dcd4-fd4b-40a7-9771-8bc529d5192b"
+        "projectId": "796b2285-89e2-4718-958c-23281e34aeb7"
       }
     }
   }

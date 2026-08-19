@@ -242,23 +242,31 @@ export default function MonitoringScreen() {
             {lang === "ar" ? "الاتجاه الأسبوعي" : "Weekly trend"}
           </Text>
 
-          <View style={styles.weekRow}>
-            {weeklyTrend.map((day) => (
-              <View key={day.label} style={styles.dayCol}>
-                <View style={[styles.barTrack, { backgroundColor: `${C.primary}1A` }]}> 
-                  <View
-                    style={[
-                      styles.dayBar,
-                      {
-                        height: `${Math.max(12, day.percent)}%`,
-                        backgroundColor: day.percent >= 70 ? C.success : day.percent >= 40 ? C.warning : C.danger,
-                      },
-                    ]}
-                  />
+          <View style={[styles.weekChartFrame, { borderColor: C.border }]}> 
+            <View pointerEvents="none" style={styles.gridLines}>
+              <View style={[styles.gridLine, { backgroundColor: `${C.border}99` }]} />
+              <View style={[styles.gridLine, { backgroundColor: `${C.border}66` }]} />
+              <View style={[styles.gridLine, { backgroundColor: `${C.border}66` }]} />
+              <View style={[styles.gridLine, { backgroundColor: `${C.border}99` }]} />
+            </View>
+            <View style={styles.weekRow}>
+              {weeklyTrend.map((day, index) => (
+                <View key={`${day.label}-${index}`} style={styles.dayCol}>
+                  <View style={[styles.barTrack, { backgroundColor: `${C.primary}1A` }]}> 
+                    <View
+                      style={[
+                        styles.dayBar,
+                        {
+                          height: `${day.percent}%`,
+                          backgroundColor: day.percent >= 70 ? C.success : day.percent >= 40 ? C.warning : C.danger,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text numberOfLines={1} style={[styles.dayLabel, { color: C.textMuted, fontFamily: fontReg }]}>{day.label}</Text>
                 </View>
-                <Text style={[styles.dayLabel, { color: C.textMuted, fontFamily: fontReg }]}>{day.label}</Text>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
         </View>
 
@@ -287,38 +295,30 @@ export default function MonitoringScreen() {
             {lang === "ar" ? "الجرعات خلال اليوم" : "Dose pattern through the day"}
           </Text>
 
-          <View style={styles.chartWrap}>
-            {TIME_BUCKETS.map((bucket) => {
-              const taken = stats.bucketTaken[bucket] || 0;
-              const missed = stats.bucketMissed[bucket] || 0;
-              const max = stats.maxValue || 1;
+          <View style={[styles.dailyChartFrame, { borderColor: C.border }]}> 
+            <View pointerEvents="none" style={styles.gridLines}>
+              <View style={[styles.gridLine, { backgroundColor: `${C.border}99` }]} />
+              <View style={[styles.gridLine, { backgroundColor: `${C.border}66` }]} />
+              <View style={[styles.gridLine, { backgroundColor: `${C.border}66` }]} />
+              <View style={[styles.gridLine, { backgroundColor: `${C.border}99` }]} />
+            </View>
+            <View style={styles.chartWrap}>
+              {TIME_BUCKETS.map((bucket) => {
+                const taken = stats.bucketTaken[bucket] || 0;
+                const missed = stats.bucketMissed[bucket] || 0;
+                const max = stats.maxValue || 1;
 
-              return (
-                <View key={bucket} style={styles.chartCol}>
-                  <View style={styles.chartBars}>
-                    <View
-                      style={[
-                        styles.bar,
-                        {
-                          height: `${Math.max(8, (taken / max) * 100)}%`,
-                          backgroundColor: C.success,
-                        },
-                      ]}
-                    />
-                    <View
-                      style={[
-                        styles.bar,
-                        {
-                          height: `${Math.max(8, (missed / max) * 100)}%`,
-                          backgroundColor: C.danger,
-                        },
-                      ]}
-                    />
+                return (
+                  <View key={bucket} style={styles.chartCol}>
+                    <View style={styles.chartBars}>
+                      <View style={[styles.bar, { height: `${(taken / max) * 100}%`, backgroundColor: C.success }]} />
+                      <View style={[styles.bar, { height: `${(missed / max) * 100}%`, backgroundColor: C.danger }]} />
+                    </View>
+                    <Text style={[styles.chartLabel, { color: C.textMuted, fontFamily: fontReg }]}>{bucket}</Text>
                   </View>
-                  <Text style={[styles.chartLabel, { color: C.textMuted, fontFamily: fontReg }]}>{bucket}</Text>
-                </View>
-              );
-            })}
+                );
+              })}
+            </View>
           </View>
 
           <View style={styles.legendRow}>
@@ -471,14 +471,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
-    height: 120,
-    marginTop: 4,
+    height: 132,
+    paddingHorizontal: 8,
+  },
+  weekChartFrame: {
+    height: 164,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
+    overflow: "hidden",
+    position: "relative",
   },
   dayCol: {
     flex: 1,
     alignItems: "center",
     height: "100%",
     justifyContent: "flex-end",
+    minWidth: 0,
   },
   barTrack: {
     width: 18,
@@ -490,11 +498,12 @@ const styles = StyleSheet.create({
   dayBar: {
     width: "100%",
     borderRadius: 10,
-    minHeight: 12,
+    minHeight: 0,
   },
   dayLabel: {
     marginTop: 8,
     fontSize: 10,
+    maxWidth: 38,
   },
   insightsPanel: {
     borderRadius: 20,
@@ -539,25 +548,38 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     height: 180,
     paddingHorizontal: 8,
-    marginBottom: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
+    marginBottom: 0,
+  },
+  dailyChartFrame: {
+    height: 198,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
+    overflow: "hidden",
+    position: "relative",
   },
   chartCol: {
     flex: 1,
     alignItems: "center",
     height: "100%",
     justifyContent: "flex-end",
+    minWidth: 0,
   },
   chartBars: {
-    width: 18,
+    width: "100%",
     height: 140,
-    justifyContent: "flex-end",
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
-    gap: 4,
+    gap: 3,
+    overflow: "hidden",
   },
   bar: {
-    width: "100%",
+    flex: 1,
     borderRadius: 8,
-    minHeight: 8,
+    minHeight: 0,
+    maxWidth: 14,
   },
   chartLabel: {
     marginTop: 10,
@@ -581,6 +603,15 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
+  },
+  gridLines: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "space-between",
+    paddingVertical: 10,
+  },
+  gridLine: {
+    height: StyleSheet.hairlineWidth,
+    width: "100%",
   },
   listPanel: {
     borderRadius: 20,

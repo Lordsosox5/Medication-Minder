@@ -76,6 +76,16 @@ class MedicationAlarmManagerImpl {
     }
   }
 
+  async hasFullScreenIntentPermission(): Promise<boolean> {
+    if (Platform.OS !== "android" || Platform.Version < 34) return true;
+    try {
+      return await MedicationAlarm.hasFullScreenIntentPermission();
+    } catch (e) {
+      console.warn("Failed to check full-screen intent permission:", e);
+      return false;
+    }
+  }
+
   /**
    * Check if app is in battery optimization whitelist.
    * Affects alarm reliability on Android 6+.

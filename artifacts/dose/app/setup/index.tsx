@@ -75,7 +75,7 @@ export default function Setup() {
         const Application = await import("expo-application");
 
         await IntentLauncher.startActivityAsync(
-          "android.settings.action.MANAGE_OVERLAY_PERMISSION",
+          "android.settings.MANAGE_APP_USE_FULL_SCREEN_INTENT",
           { data: `package:${Application.applicationId}` }
         );
       } catch (e) {}

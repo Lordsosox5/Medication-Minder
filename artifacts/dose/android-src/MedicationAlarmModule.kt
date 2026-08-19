@@ -8,6 +8,7 @@
 package com.tabira.app
 
 import android.app.AlarmManager
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -51,6 +52,22 @@ class MedicationAlarmModule(reactContext: ReactApplicationContext) :
                     context,
                     "android.permission.POST_NOTIFICATIONS"
                 ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            } else {
+                true
+            }
+            promise.resolve(hasPermission)
+        } catch (e: Exception) {
+            promise.reject("ERROR", e.message)
+        }
+    }
+
+    @ReactMethod
+    fun hasFullScreenIntentPermission(promise: Promise) {
+        try {
+            val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val notificationManager =
+                    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.canUseFullScreenIntent()
             } else {
                 true
             }

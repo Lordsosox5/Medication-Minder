@@ -50,6 +50,7 @@ const withMedicationAlarm = (config) => {
       "android.permission.WAKE_LOCK",
       "android.permission.RECEIVE_BOOT_COMPLETED",
       "android.permission.FOREGROUND_SERVICE",
+      "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
       "android.permission.SCHEDULE_EXACT_ALARM",
       "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
       "android.permission.USE_FULL_SCREEN_INTENT",
@@ -244,6 +245,7 @@ const withMedicationAlarm = (config) => {
           "MedicationAlarmActivity.kt",
           "MedicationAlarmModule.kt",
           "MedicationAlarmPackage.kt",
+          "MedicationAlarmOverlayWindow.kt",
           "MedicationAlarmReceiver.kt",
           "MedicationAlarmService.kt",
           "RestoreAlarmsWorker.kt",
@@ -270,6 +272,34 @@ const withMedicationAlarm = (config) => {
             sourceFile,
             destinationFile
           );
+        }
+
+        // Android 15 deprecates status/navigation bar color parameters.
+        const stylesFile = path.join(
+          config.modRequest.platformProjectRoot,
+          "app",
+          "src",
+          "main",
+          "res",
+          "values",
+          "styles.xml"
+        );
+
+        if (fs.existsSync(stylesFile)) {
+          const styles = fs.readFileSync(stylesFile, "utf8");
+          const cleanedStyles = styles
+            .replace(
+              /\s*<item name="android:statusBarColor">[^<]*<\/item>/g,
+              ""
+            )
+            .replace(
+              /\s*<item name="android:navigationBarColor">[^<]*<\/item>/g,
+              ""
+            );
+
+          if (cleanedStyles !== styles) {
+            fs.writeFileSync(stylesFile, cleanedStyles);
+          }
         }
 
         return config;

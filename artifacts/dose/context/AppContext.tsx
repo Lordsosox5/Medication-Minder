@@ -466,10 +466,11 @@ export function AppContextProvider({
                     : `${med.doseAmount} · Time to take your dose now`;
 
             const isExactMedicationTime = kind === "now";
+            let nativeAlarmScheduled = false;
 
             if (isExactMedicationTime && Platform.OS === "android") {
               try {
-                await medicationAlarmManager.scheduleAlarm({
+                nativeAlarmScheduled = await medicationAlarmManager.scheduleAlarm({
                   medicationId: med.id,
                   medicationName: med.name,
                   doseAmount: med.doseAmount,
@@ -479,6 +480,8 @@ export function AppContextProvider({
                 console.warn("Failed to schedule native alarm:", e);
               }
             }
+
+            if (nativeAlarmScheduled) return null;
 
             return Notifications.scheduleNotificationAsync({
               content: {

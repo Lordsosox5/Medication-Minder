@@ -76,6 +76,7 @@ const withMedicationAlarm: ConfigPlugin = (config) => {
       "android.permission.WAKE_LOCK",
       "android.permission.RECEIVE_BOOT_COMPLETED",
       "android.permission.FOREGROUND_SERVICE",
+      "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
       "android.permission.SCHEDULE_EXACT_ALARM",
       "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
       "android.permission.USE_FULL_SCREEN_INTENT",

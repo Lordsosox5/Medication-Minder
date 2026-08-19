@@ -12,6 +12,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import React, { useEffect } from "react";
 import { Platform, PermissionsAndroid } from "react-native";
@@ -22,7 +23,11 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AppContextProvider, useApp } from "@/context/AppContext";
+import { medicationAlarmManager } from "@/services/MedicationAlarmManager";
 import FullScreenNotificationModal from "@/components/FullScreenNotificationModal";
+
+const FULL_SCREEN_PERMISSION_REQUESTED_KEY =
+  "tabira.fullScreenPermissionRequested";
 
 const queryClient = new QueryClient();
 
@@ -107,7 +112,6 @@ export default function RootLayout() {
     if (Platform.OS === "web") return;
     async function setupNotifications() {
       const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") return;
 
       if (Platform.OS === "android") {
         try {
@@ -121,8 +125,43 @@ export default function RootLayout() {
               // user denied notification permission on Android 13+
             }
           }
+
+          if (Platform.Version >= 34) {
+            const alreadyRequested = await AsyncStorage.getItem(
+              FULL_SCREEN_PERMISSION_REQUESTED_KEY
+            );
+
+            if (alreadyRequested !== "true") {
+              await AsyncStorage.setItem(
+                FULL_SCREEN_PERMISSION_REQUESTED_KEY,
+                "true"
+              );
+
+              const hasFullScreenPermission =
+                await medicationAlarmManager.hasFullScreenIntentPermission();
+
+              if (!hasFullScreenPermission) {
+                try {
+                  const IntentLauncher = await import("expo-intent-launcher");
+                  const Application = await import("expo-application");
+
+                  await IntentLauncher.startActivityAsync(
+                    "android.settings.MANAGE_APP_USE_FULL_SCREEN_INTENT",
+                    { data: `package:${Application.applicationId}` }
+                  );
+                } catch (e) {
+                  console.warn(
+                    "Could not open full-screen notification settings:",
+                    e
+                  );
+                }
+              }
+            }
+          }
         } catch (e) {}
       }
+
+      if (status !== "granted") return;
 
       // Handler for notifications when app is in foreground
       Notifications.setNotificationHandler({

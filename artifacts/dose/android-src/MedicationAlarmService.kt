@@ -32,7 +32,8 @@ class MedicationAlarmService : Service() {
         const val ACTION_SNOOZE_ALARM = "com.tabira.app.SNOOZE_ALARM"
 
         const val NOTIFICATION_ID = 9999
-        const val NOTIFICATION_CHANNEL_ID = "medication_alarm"
+        const val FULL_SCREEN_NOTIFICATION_ID = 10000
+        const val NOTIFICATION_CHANNEL_ID = "medication_alarm_v2"
     }
 
     private var mediaPlayer: MediaPlayer? = null
@@ -89,13 +90,21 @@ class MedicationAlarmService : Service() {
                 )
 
                 startAlarmSound()
-                launchAlarmActivity()
 
                 val notification =
                     buildAlarmNotification()
 
                 startForeground(
                     NOTIFICATION_ID,
+                    notification
+                )
+
+                // Re-post the alarm notification so Android evaluates its
+                // full-screen intent instead of treating it only as an FGS notification.
+                val notificationManager =
+                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(
+                    FULL_SCREEN_NOTIFICATION_ID,
                     notification
                 )
             }
@@ -114,35 +123,15 @@ class MedicationAlarmService : Service() {
                     STOP_FOREGROUND_REMOVE
                 )
 
+                val notificationManager =
+                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.cancel(FULL_SCREEN_NOTIFICATION_ID)
+
                 stopSelf()
             }
         }
 
         return START_NOT_STICKY
-    }
-
-    private fun launchAlarmActivity() {
-        try {
-            val alarmIntent = Intent(this, MedicationAlarmActivity::class.java).apply {
-                action = "com.tabira.app.ALARM_ALERT"
-                addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                        Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
-                )
-                putExtra("alarmId", currentAlarmId)
-                putExtra("medicationId", currentMedicationId)
-                putExtra("medicationName", currentMedicationName)
-                putExtra("doseAmount", currentDoseAmount)
-                putExtra("scheduledTime", System.currentTimeMillis())
-            }
-
-            startActivity(alarmIntent)
-            Log.d("MedicationAlarmService", "Started alarm activity over current app")
-        } catch (e: Exception) {
-            Log.e("MedicationAlarmService", "Failed to launch alarm activity", e)
-        }
     }
 
     /**
